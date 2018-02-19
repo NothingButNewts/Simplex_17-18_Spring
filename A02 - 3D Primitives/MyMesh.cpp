@@ -1,4 +1,6 @@
 #include "MyMesh.h"
+#include <math.h>
+
 void MyMesh::Init(void)
 {
 	m_bBinded = false;
@@ -259,6 +261,8 @@ void MyMesh::GenerateCuboid(vector3 a_v3Dimensions, vector3 a_v3Color)
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
 }
+
+
 void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions, vector3 a_v3Color)
 {
 	if (a_fRadius < 0.01f)
@@ -276,7 +280,20 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	float fValue = a_fRadius;
+
+	vector3 center(0, a_fHeight, 0);
+	vector3 point0(a_fRadius, 0, 0);
+	vector3 point1(0, 0, 0);
+	for (int i = 0; i <= a_nSubdivisions; i++) {
+		point1 = vector3(cos((2*PI * i) / a_nSubdivisions), 0, sin((2*PI * i) / a_nSubdivisions));
+		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+		point1 = point1 / mag;
+		point1 *= a_fRadius;
+		AddTri(center, point1, point0);
+		AddTri(vector3(0,0,0), point0, point1);
+		point0 = point1;
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -300,7 +317,25 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	float fValue = a_fRadius;
+
+	vector3 center(0, a_fHeight, 0);
+	vector3 point0(a_fRadius, 0, 0);
+	vector3 point1(0, 0, 0);
+	vector3 point2(0, 0, 0);
+	vector3 point3(0, 0, 0);
+	for (int i = 0; i <= a_nSubdivisions; i++) {
+		point1 = vector3(cos((2 * PI * i) / a_nSubdivisions), 0, sin((2 * PI * i) / a_nSubdivisions));
+		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+		point1 = point1 / mag;
+		point1 *= a_fRadius;
+		point2 = point1 + vector3(0, a_fHeight, 0);
+		point3 = point0 + vector3(0, a_fHeight, 0);
+		AddQuad(point1, point0, point2, point3);
+		AddTri(vector3(0, 0, 0), point0, point1);
+		AddTri(center, point2, point3);
+		point0 = point1;
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -330,7 +365,38 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	float fValue = a_fOuterRadius;
+
+	vector3 center(0, a_fHeight, 0);
+	vector3 point0(a_fOuterRadius, 0, 0);
+	vector3 point1(0, 0, 0);
+	vector3 point2(0, 0, 0);
+	vector3 point3(0, 0, 0);
+	vector3 point00(a_fInnerRadius, 0, 0);
+	vector3 point01(0, 0, 0);
+	vector3 point02(0, 0, 0);
+	vector3 point03(0, 0, 0);
+	for (int i = 0; i <= a_nSubdivisions; i++) {
+		point1 = vector3(cos((2 * PI * i) / a_nSubdivisions), 0, sin((2 * PI * i) / a_nSubdivisions));
+		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+		point1 = point1 / mag;
+		point1 *= a_fOuterRadius;
+		point2 = point1 + vector3(0, a_fHeight, 0);
+		point3 = point0 + vector3(0, a_fHeight, 0);
+		AddQuad(point1, point0, point2, point3);
+		
+		point01 = vector3(cos((2 * PI * i) / a_nSubdivisions), 0, sin((2 * PI * i) / a_nSubdivisions));
+		mag = sqrt((point01.x*point01.x) + (point01.y * point01.y) + (point01.z * point01.z));
+		point01 = point01 / mag;
+		point01 *= a_fInnerRadius;
+		point02 = point01 + vector3(0, a_fHeight, 0);
+		point03 = point00 + vector3(0, a_fHeight, 0);
+		AddQuad(point01, point02, point00, point03);
+		AddQuad(point01, point00, point1, point0);
+		AddQuad(point03, point02, point3, point2);
+		point0 = point1;
+		point00 = point01;
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -387,7 +453,36 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	vector3 center(0, -a_fRadius, 0);
+	vector3 point0(0, -a_fRadius, 0);
+	vector3 center0(0, a_fRadius, 0);
+	vector3 point00(0, 0, 0);
+	vector3 point1(0, 0, 0);
+	vector3 point2(0, 0, 0);
+	std::vector<vector3> vertices;
+	for (int i = 0; i < 15; i++) {
+		vertices.push_back(vector3(0, 0, 0));
+	}
+	for (int i = 0; i < 6; i++) {
+		point1 = vector3(cos((2 * PI * i) / 5), -a_fRadius, sin((2 * PI * i) / 5));
+		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+		point1.x = point1.x / mag;
+		point1.z = point1.z / mag;
+		point1.x *= (a_fRadius );
+		point1.z *= (a_fRadius );
+		AddTri(vector3(0, -a_fRadius, 0), point0, point1);
+		point0 = point1;
+	}
+	for (int i = 0; i < 6; i++) {
+		point2 = vector3(cos((2 * PI * i) / 5), 0, sin((2 * PI * i) / 5));
+		float mag = sqrt((point2.x*point2.x) + (point2.y * point2.y) + (point2.z * point2.z));
+		point2.x = point2.x / mag;
+		point2.z = point2.z / mag;
+		point2.x *= (a_fRadius * 1.2);
+		point2.z *= (a_fRadius * 1.2);
+		AddTri(vector3(0, 0, 0), point00, point2);
+		point00 = point2;
+	}
 	// -------------------------------
 
 	// Adding information about color
