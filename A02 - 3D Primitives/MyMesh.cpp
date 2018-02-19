@@ -460,9 +460,6 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	vector3 point1(0, 0, 0);
 	vector3 point2(0, 0, 0);
 	std::vector<vector3> vertices;
-	for (int i = 0; i < 15; i++) {
-		vertices.push_back(vector3(0, 0, 0));
-	}
 	for (int i = 0; i < 6; i++) {
 		point1 = vector3(cos((2 * PI * i) / 5), -a_fRadius, sin((2 * PI * i) / 5));
 		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
@@ -470,6 +467,7 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 		point1.z = point1.z / mag;
 		point1.x *= (a_fRadius );
 		point1.z *= (a_fRadius );
+		vertices.push_back(point1);
 		AddTri(vector3(0, -a_fRadius, 0), point0, point1);
 		point0 = point1;
 	}
@@ -480,9 +478,32 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 		point2.z = point2.z / mag;
 		point2.x *= (a_fRadius * 1.2);
 		point2.z *= (a_fRadius * 1.2);
-		AddTri(vector3(0, 0, 0), point00, point2);
+		//AddTri(vector3(0, 0, 0), point00, point2);
+		vertices.push_back(point2);
 		point00 = point2;
 	}
+	point0 = vector3(0, a_fRadius, 0);
+	for (int i = 0; i < 6; i++) {
+		point1 = vector3(cos((2 * PI * i) / 5), a_fRadius, sin((2 * PI * i) / 5));
+		float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+		point1.x = point1.x / mag;
+		point1.z = point1.z / mag;
+		point1.x *= (a_fRadius);
+		point1.z *= (a_fRadius);
+		AddTri(vector3(0, a_fRadius, 0), point1, point0);
+		vertices.push_back(point1);
+		point0 = point1;
+	}
+	AddQuad(vertices[0], vertices[6], vertices[1], vertices[7]);
+	AddQuad(vertices[1], vertices[7], vertices[2], vertices[8]);
+	AddQuad(vertices[2], vertices[8], vertices[3], vertices[9]);
+	AddQuad(vertices[3], vertices[9], vertices[4], vertices[10]);
+	AddQuad(vertices[4], vertices[10], vertices[5], vertices[11]);
+	AddQuad(vertices[6], vertices[12], vertices[7], vertices[13]);
+	AddQuad(vertices[7], vertices[13], vertices[8], vertices[14]);
+	AddQuad(vertices[8], vertices[14], vertices[9], vertices[15]);
+	AddQuad(vertices[9], vertices[15], vertices[10], vertices[16]);
+	AddQuad(vertices[10], vertices[16], vertices[11], vertices[17]);
 	// -------------------------------
 
 	// Adding information about color
