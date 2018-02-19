@@ -1,5 +1,5 @@
 #include "MyMesh.h"
-#include <math.h>
+#include <math.h> //For sin/cos
 
 void MyMesh::Init(void)
 {
@@ -281,7 +281,7 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 
 	// Replace this with your code
 	float fValue = a_fRadius;
-
+	//Make a cone with given subdivisions and given radius
 	vector3 center(0, a_fHeight, 0);
 	vector3 point0(a_fRadius, 0, 0);
 	vector3 point1(0, 0, 0);
@@ -318,7 +318,7 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 
 	// Replace this with your code
 	float fValue = a_fRadius;
-
+	//Make a cylindera with given subdivisions and given radius
 	vector3 center(0, a_fHeight, 0);
 	vector3 point0(a_fRadius, 0, 0);
 	vector3 point1(0, 0, 0);
@@ -366,7 +366,7 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 
 	// Replace this with your code
 	float fValue = a_fOuterRadius;
-
+	//Make a tube with given subdivisions and given radii
 	vector3 center(0, a_fHeight, 0);
 	vector3 point0(a_fOuterRadius, 0, 0);
 	vector3 point1(0, 0, 0);
@@ -453,6 +453,7 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Init();
 
 	// Replace this with your code
+	// Make an approximation of a sphere using a dodecahedron with given radius
 	vector3 center(0, -a_fRadius, 0);
 	vector3 point0(0, -a_fRadius, 0);
 	vector3 center0(0, a_fRadius, 0);
