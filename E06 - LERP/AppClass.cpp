@@ -62,17 +62,18 @@ void Application::Display(void)
 	static float fPercentage = 0.0f;
 	v3CurrentPos = vector3(0.0f, 0.0f, 0.0f);
 	static float iterator = 0;
-	static vector3 v3initial(m_stopsList[iterator]);
-	static vector3 v3end(m_stopsList[iterator+1]);
+	vector3 v3initial(m_stopsList[iterator]);
+	vector3 v3end(m_stopsList[iterator+1]);
 	v3CurrentPos = glm::lerp(v3initial, v3end, fPercentage);
-	vector3 prox = v3CurrentPos - v3end;
-	if ( < 0.5f) {
-		iterator++;
-		v3initial = v3end;
+	float prox = sqrt((v3CurrentPos.x - v3end.x)*(v3CurrentPos.x - v3end.x) + (v3CurrentPos.y - v3end.y)*(v3CurrentPos.y - v3end.y) + (v3CurrentPos.z - v3end.z)*(v3CurrentPos.z - v3end.z));
+	if ( prox < 0.1f) {
 		fPercentage = 0;
-		printf("1st point reached");
+		iterator++;
+		std::cout << iterator << std::endl;
 	}
-
+	if (iterator == m_stopsList.size()-1) {
+		iterator = 0;
+	}
 	fPercentage += 0.01f;
 	//-------------------
 	
