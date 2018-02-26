@@ -32,10 +32,13 @@ void Application::InitVariables(void)
 		This part will create the orbits, it start at 3 because that is the minimum subdivisions a torus can have
 	*/
 	uint uSides = 3; //start with the minimal 3 sides
+	start = vector3(fSize, 0.0f, 0.0f);
+	end = vector3(fSize, 0.0f, 0.0f);
 	for (uint i = uSides; i < m_uOrbits + uSides; i++)
 	{
 		vector3 v3Color = WaveLengthToRGB(uColor); //calculate color based on wavelength
 		m_shapeList.push_back(m_pMeshMngr->GenerateTorus(fSize, fSize - 0.1f, 3, i, v3Color)); //generate a custom torus and add it to the meshmanager
+		points[i].push_back(vector3(fSize, 0.0f, 0.0f));
 		fSize += 0.5f; //increment the size for the next orbit
 		uColor -= static_cast<uint>(decrements); //decrease the wavelength
 	}
@@ -63,7 +66,7 @@ void Application::Display(void)
 		The following offset will orient the orbits as in the demo, start without it to make your life easier.
 	*/
 	//m4Offset = glm::rotate(IDENTITY_M4, 90.0f, AXIS_Z);
-
+	static float fPercentage = 0.01f;
 	// draw a shapes
 	for (uint i = 0; i < m_uOrbits; ++i)
 	{
@@ -71,12 +74,12 @@ void Application::Display(void)
 
 		//calculate the current position
 		vector3 v3CurrentPos = ZERO_V3;
-		matrix4 m4Model = glm::translate(m4Offset, v3CurrentPos);
+		matrix4 m4Model = glm::translate(m4Offset, glm::lerp(points[i][0], points[i][0], fPercentage));
 
 		//draw spheres
 		m_pMeshMngr->AddSphereToRenderList(m4Model * glm::scale(vector3(0.1)), C_WHITE);
 	}
-
+	//fPercentage += 0.01;
 	//render list call
 	m_uRenderCallCount = m_pMeshMngr->Render();
 
