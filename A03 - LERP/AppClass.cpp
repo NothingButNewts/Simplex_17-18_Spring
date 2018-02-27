@@ -38,7 +38,17 @@ void Application::InitVariables(void)
 	{
 		vector3 v3Color = WaveLengthToRGB(uColor); //calculate color based on wavelength
 		m_shapeList.push_back(m_pMeshMngr->GenerateTorus(fSize, fSize - 0.1f, 3, i, v3Color)); //generate a custom torus and add it to the meshmanager
-		points[i].push_back(vector3(fSize, 0.0f, 0.0f));
+		std::vector<vector3> temp;
+		for (uint j = 0; j < i; j++) {
+			vector3 point1 = vector3(cos((2 * PI * j) / i), sin((2 * PI * j) / i), 0);
+			float mag = sqrt((point1.x*point1.x) + (point1.y * point1.y) + (point1.z * point1.z));
+			point1 = point1 / mag;
+			point1 *= fSize;
+			temp.push_back(point1);
+		}
+		points.push_back(temp);
+		iterators.push_back(0);
+		iterators2.push_back(1);
 		fSize += 0.5f; //increment the size for the next orbit
 		uColor -= static_cast<uint>(decrements); //decrease the wavelength
 	}
@@ -62,24 +72,38 @@ void Application::Display(void)
 	matrix4 m4View = m_pCameraMngr->GetViewMatrix(); //view Matrix
 	matrix4 m4Projection = m_pCameraMngr->GetProjectionMatrix(); //Projection Matrix
 	matrix4 m4Offset = IDENTITY_M4; //offset of the orbits, starts as the global coordinate system
-	/*
-		The following offset will orient the orbits as in the demo, start without it to make your life easier.
-	*/
-	//m4Offset = glm::rotate(IDENTITY_M4, 90.0f, AXIS_Z);
-	static float fPercentage = 0.01f;
+	static float fTimer = 0;	//store the new timer
+	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
+	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
 	// draw a shapes
+	float prox = 0.0f;
+	//get the percentace
+	float fTimeBetweenStops = 1.0;//in seconds
+	float fPercentage = MapValue(fTimer, 0.0f, fTimeBetweenStops, 0.0f, 1.0f);
 	for (uint i = 0; i < m_uOrbits; ++i)
 	{
-		m_pMeshMngr->AddMeshToRenderList(m_shapeList[i], glm::rotate(m4Offset, 90.0f, AXIS_X));
-
-		//calculate the current position
-		vector3 v3CurrentPos = ZERO_V3;
-		matrix4 m4Model = glm::translate(m4Offset, glm::lerp(points[i][0], points[i][0], fPercentage));
-
-		//draw spheres
+		vector3 start = points[i][iterators[i]]; //get the first point
+		vector3 end = points[i][iterators2[i]]; //get the destination point
+		vector3 lerp = glm::lerp(start, end, fPercentage); //get current position
+		//if the time limit is reached
+		if (fPercentage >= 1.0f)
+		{
+			//update the iterators
+			iterators[i] += 1;
+			iterators2[i] += 1;
+			//make sure the iterators are within bounds
+			if (iterators[i] > points[i].size() - 1) {
+				iterators[i] = 0;
+			}
+			if (iterators2[i] > points[i].size() - 1) {
+				iterators2[i] = 0;
+			}
+			fTimer = m_pSystem->GetDeltaTime(uClock);//restart the clock
+		}
+		matrix4 m4Model = glm::translate(m4Offset, lerp);
 		m_pMeshMngr->AddSphereToRenderList(m4Model * glm::scale(vector3(0.1)), C_WHITE);
+		m_pMeshMngr->AddMeshToRenderList(m_shapeList[i], glm::rotate(m4Offset, 90.0f, AXIS_X));
 	}
-	//fPercentage += 0.01;
 	//render list call
 	m_uRenderCallCount = m_pMeshMngr->Render();
 

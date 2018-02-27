@@ -1,6 +1,6 @@
 /*----------------------------------------------
-Programmer: Alberto Bobadilla (labigm@gmail.com)
-Date: 2017/05
+Programmer: Isaac Walerstein (ilw7159@g.rit.edu)
+Date: 2018/02
 ----------------------------------------------*/
 #ifndef __APPLICATIONCLASS_H_
 #define __APPLICATIONCLASS_H_
@@ -20,10 +20,12 @@ class Application
 {
 	uint m_uOrbits = 0; //number of shapes starting at 3 and increasing in sides
 	std::vector<uint> m_shapeList; //shape index for circles
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
-	vector3 start = vector3(0.0f, 0.0f, 0.0f);
-	vector3 end = vector3(0.0f, 0.0f, 0.0f);
-	std::vector<std::vector<vector3>> points;
+	String m_sProgrammer = "Isaac Walerstein - ilw7159@g.rit.edu";
+	vector3 start = vector3(0.0f, 0.0f, 0.0f); //the initial position for a lerp movement
+	vector3 end = vector3(0.0f, 0.0f, 0.0f); //the end position for a lerp movement
+	std::vector<std::vector<vector3>> points; //2D vector for all the shape vertices
+	std::vector<int> iterators; //first vector of iterators
+	std::vector<int> iterators2; //second vector of iterators
 	
 private:
 	static ImGuiObject gui; //GUI object

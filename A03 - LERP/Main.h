@@ -1,6 +1,6 @@
 /*----------------------------------------------
-Programmer: Alberto Bobadilla (labigm@gmail.com)
-Date: 2017/05
+Programmer: Isaac Walerstein (ilw7159@g.rit.edu)
+Date: 2018/02
 ----------------------------------------------*/
 #ifndef __MAIN_H_
 #define __MAIN_H_
