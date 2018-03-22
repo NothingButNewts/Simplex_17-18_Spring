@@ -325,6 +325,11 @@ void Application::ArcBall(float a_fSensitivity)
 	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
 								   //return qArcBall; // return the new quaternion orientation
 }
+
+float place = 20.0f;
+float place2 = 3.0f;
+float place3 = 0.0f;
+
 void Application::CameraRotation(float a_fSpeed)
 {
 	if (m_bFPC == false)
@@ -368,7 +373,22 @@ void Application::CameraRotation(float a_fSpeed)
 		fDeltaMouse = static_cast<float>(MouseY - CenterY);
 		fAngleX += fDeltaMouse * a_fSpeed;
 	}
-	//Change the Yaw and the Pitch of the camera
+	/*Get quaternion values for the x and y coordinates of the mouse
+	and apply them to the target of the camera*/
+	vector3 cam = m_pCamera->GetPosition();
+	fAngleX *= (180 / PI);
+	fAngleY *= (180 / PI);
+	vector3 target = m_pCamera->GetTarget();
+	glm::quat temp = glm::angleAxis(fAngleX, glm::vec3(1.0f, 0.0f, 0.0f));
+	target = glm::vec3(temp * glm::vec4(target, 1.0));
+	target = glm::normalize(target) * 0.5f;
+	vector3 target2 = m_pCamera->GetTarget();
+	temp = glm::angleAxis(fAngleX, glm::vec3(0.0f, 1.0f, 0.0f));
+	target2 = glm::vec3(temp * glm::vec4(target2, 1.0));
+	target2 = glm::normalize(target2);
+	target = target + target2;
+	target = target * 2.0f;
+	m_pCamera->SetTarget(target);
 	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
 }
 //Keyboard
@@ -379,14 +399,43 @@ void Application::ProcessKeyboard(void)
 	for discreet on/off use ProcessKeyboardPressed/Released
 	*/
 #pragma region Camera Position
-	float fSpeed = 0.1f;
+	float fSpeed = 1.0f;
 	float fMultiplier = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ||
 		sf::Keyboard::isKeyPressed(sf::Keyboard::RShift);
 
-	if (fMultiplier)
+	if (fMultiplier) {
 		fSpeed *= 5.0f;
+	}
+
+	bool changed = false; //did we move the camera?
+	//Adjust the position of the camera based on key presses
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+		place -= 0.1f;
+		changed = true;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		changed = true;
+		place += 0.1f;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		changed = true;
+		place3 -= 0.1f;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+		changed = true;
+		place3 += 0.1f;
+
+	}
+	if (changed == true) {
+		m_pCamera->SetPosition(vector3(place3, place2, place));
+		m_pCamera->SetTarget(vector3(place3, place2, place - 1.0f));
+	}
 #pragma endregion
 }
+
 //Joystick
 void Application::ProcessJoystick(void)
 {
