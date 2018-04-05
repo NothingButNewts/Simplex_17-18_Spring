@@ -1,6 +1,7 @@
 /*----------------------------------------------
 Programmer: Alberto Bobadilla (labigm@gmail.com)
 Date: 2017/06
+Updated to use MyEntityManager class by Nic Hartley & Isaac Walerstein 4/5/2018
 ----------------------------------------------*/
 #ifndef __APPLICATIONCLASS_H_
 #define __APPLICATIONCLASS_H_
@@ -11,6 +12,7 @@ Date: 2017/06
 #include "imgui\ImGuiObject.h"
 
 #include "MyEntity.h"
+#include "MyEntityManager.h"
 
 namespace Simplex
 {
@@ -23,11 +25,13 @@ class Application
 	MyEntity* m_pCow = nullptr; //Entity that represents the Steve model
 	MyEntity* m_pPig = nullptr; //Entity that represents the Steve model
 
+	MyEntityManager* Emanager = nullptr; //entity manager for the excercise
+
 	vector3 m_v3Creeper; //position of the creeper
 	quaternion m_qCreeper; //orientation for the creeper
 		
 private:
-	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu"; //programmer
+	String m_sProgrammer = "Isaac Walerstein - ilw7159@g.rit.edu"; //programmer
 
 	static ImGuiObject gui; //GUI object
 	bool m_bGUI_Main = true; //show Main GUI window?
