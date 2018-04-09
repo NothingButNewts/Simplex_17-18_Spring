@@ -38,6 +38,9 @@ class MyRigidBody
 
 	std::set<MyRigidBody*> m_CollidingRBSet; //set of rigid bodies this one is colliding with
 
+	std::vector<vector3> localAxes; //list of vectors for local axes of objects
+
+
 public:
 	/*
 	Usage: Constructor
@@ -225,6 +228,10 @@ public:
 	Output: ---
 	*/
 	void SetModelMatrix(matrix4 a_m4ModelMatrix);
+	/*
+	Gets the list of local axes
+	*/
+	std::vector<vector3> GetAxes(void);
 #pragma endregion
 	
 private:

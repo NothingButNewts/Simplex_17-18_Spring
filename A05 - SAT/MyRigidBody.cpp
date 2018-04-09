@@ -76,6 +76,7 @@ vector3 MyRigidBody::GetMinGlobal(void) { return m_v3MinG; }
 vector3 MyRigidBody::GetMaxGlobal(void) { return m_v3MaxG; }
 vector3 MyRigidBody::GetHalfWidth(void) { return m_v3HalfWidth; }
 matrix4 MyRigidBody::GetModelMatrix(void) { return m_m4ToWorld; }
+std::vector<vector3> MyRigidBody::GetAxes(void) { return localAxes; }
 void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 {
 	//to save some calculations if the model matrix is the same there is nothing to do here
@@ -163,6 +164,12 @@ MyRigidBody::MyRigidBody(std::vector<vector3> a_pointList)
 
 	//Get the distance between the center and either the min or the max
 	m_fRadius = glm::distance(m_v3Center, m_v3MinL);
+
+	localAxes.push_back(vector3(m_v3MaxG.x, m_v3MinG.y, m_v3MinG.z) - m_v3MinG);
+
+	localAxes.push_back(vector3(m_v3MinG.x, m_v3MaxG.y, m_v3MinG.z) - m_v3MinG);
+
+	localAxes.push_back(vector3(m_v3MinG.x, m_v3MinG.y, m_v3MaxG.z) - m_v3MinG);
 }
 MyRigidBody::MyRigidBody(MyRigidBody const& a_pOther)
 {
@@ -226,6 +233,18 @@ void MyRigidBody::ClearCollidingList(void)
 }
 bool MyRigidBody::IsColliding(MyRigidBody* const a_pOther)
 {
+
+	vector3 temp = vector3(m_m4ToWorld * vector4(m_v3Center + vector3(1, 0, 0), 1));
+	localAxes[0] = temp - GetCenterGlobal();
+
+	temp = vector3(m_m4ToWorld * vector4(m_v3Center + vector3(0, 1, 0), 1));
+	localAxes[1] = temp - GetCenterGlobal();
+
+	temp = vector3(m_m4ToWorld * vector4(m_v3Center + vector3(0, 0, 1), 1));
+	localAxes[2] = temp - GetCenterGlobal();
+
+	vector3 t = a_pOther->GetCenterGlobal() - this->GetCenterGlobal();
+
 	//check if spheres are colliding as pre-test
 	bool bColliding = (glm::distance(GetCenterGlobal(), a_pOther->GetCenterGlobal()) < m_fRadius + a_pOther->m_fRadius);
 	
@@ -276,17 +295,126 @@ void MyRigidBody::AddToRenderList(void)
 
 uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 {
-	/*
-	Your code goes here instead of this comment;
+	/*Algorithm based on code from the book*/
+	float ra, rb;
+	matrix3 R, AbsR;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			R[i][j] = glm::dot(localAxes[i], a_pOther->localAxes[j]);
+		}
+	}
 
-	For this method, if there is an axis that separates the two objects
-	then the return will be different than 0; 1 for any separating axis
-	is ok if you are not going for the extra credit, if you could not
-	find a separating axis you need to return 0, there is an enum in
-	Simplex that might help you [eSATResults] feel free to use it.
-	(eSATResults::SAT_NONE has a value of 0)
-	*/
+	vector3 t = a_pOther->GetCenterGlobal() - this->GetCenterGlobal();
+
+	t = vector3(glm::dot(t, localAxes[0]), glm::dot(t, localAxes[1]), glm::dot(t, localAxes[2]));
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			AbsR[i][j] = glm::abs(R[i][j] + 0.0000001f);
+		}
+	}
+
+	for (int i = 0; i < 3; i++) {
+		if (i == 0) {
+			ra = GetHalfWidth().x;
+		}
+		else if (i == 1) {
+			ra = GetHalfWidth().y;
+		}
+		else if (i == 2) {
+			ra = GetHalfWidth().z;
+		}
+		rb = a_pOther->GetHalfWidth().x * AbsR[i][0] + a_pOther->GetHalfWidth().y * AbsR[i][1] + a_pOther->GetHalfWidth().z * AbsR[i][2];
+		if (glm::abs(t[i]) > ra + rb) { return 1; }
+	}
+
+	for (int i = 0; i < 3; i++) {
+		ra = GetHalfWidth().x * AbsR[0][i] + GetHalfWidth().y * AbsR[1][i] + GetHalfWidth().z * AbsR[2][i];
+		if (i == 0) {
+			rb = GetHalfWidth().x;
+		}
+		else if (i == 1) {
+			rb = GetHalfWidth().y;
+		}
+		else if (i == 2) {
+			rb = GetHalfWidth().z;
+		}
+		if (glm::abs(t[0] * R[0][i] + t[1] * R[1][i] + t[2] * R[2][i]) > ra + rb) return 1; 
+	}
+
+	//Test axis L = A0 x B0
+	ra = GetHalfWidth().x * AbsR[2][0] + GetHalfWidth().z * AbsR[1][0];
+	rb = a_pOther->GetHalfWidth().y * AbsR[0][2] + a_pOther->GetHalfWidth().z * AbsR[0][1];
+	if (glm::abs(t[2] * R[1][0] - t[1] * R[2][0]) > ra + rb) {
+		std::cout << "A0 x B0" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A0 x B1
+	ra = GetHalfWidth().y * AbsR[2][1] + GetHalfWidth().z * AbsR[1][1];
+	rb = a_pOther->GetHalfWidth().x * AbsR[0][2] + a_pOther->GetHalfWidth().z * AbsR[0][0];
+	if (glm::abs(t[2] * R[1][1] - t[1] * R[2][1]) > ra + rb) { 
+		std::cout << "A0 x B1" << std::endl;
+		return 1; }
+
+	//Test axis L = A0 x B2
+	ra = GetHalfWidth().y * AbsR[2][2] + GetHalfWidth().z * AbsR[1][2];
+	rb = a_pOther->GetHalfWidth().x * AbsR[0][1] + a_pOther->GetHalfWidth().y * AbsR[0][0];
+	if (glm::abs(t[2] * R[1][2] - t[1] * R[2][2]) > ra + rb) { 
+		std::cout << "A0 x B2" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A1 x B0
+	ra = GetHalfWidth().x * AbsR[2][0] + GetHalfWidth().z * AbsR[0][0];
+	rb = a_pOther->GetHalfWidth().y * AbsR[1][2] + a_pOther->GetHalfWidth().z * AbsR[1][1];
+	if (glm::abs(t[0] * R[2][0] - t[2] * R[0][0]) > ra + rb) {
+		std::cout << "A1 x B0" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A1 x B1
+	ra = GetHalfWidth().x * AbsR[2][1] + GetHalfWidth().z * AbsR[0][1];
+	rb = a_pOther->GetHalfWidth().x * AbsR[1][2] + a_pOther->GetHalfWidth().z * AbsR[1][0];
+	if (glm::abs(t[0] * R[2][1] - t[2] * R[0][1]) > ra + rb) {
+		std::cout << "A1 x B1" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A1 x B2
+	ra = GetHalfWidth().x * AbsR[2][2] + GetHalfWidth().z * AbsR[0][2];
+	rb = a_pOther->GetHalfWidth().x * AbsR[1][1] + a_pOther->GetHalfWidth().y * AbsR[1][0];
+	if (glm::abs(t[0] * R[2][2] - t[2] * R[0][2]) > ra + rb) {
+		std::cout << "A1 x B2" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A2 x B0
+	ra = (GetHalfWidth().x * AbsR[1][0]) + (GetHalfWidth().y * AbsR[0][0]);
+	rb = (a_pOther->GetHalfWidth().y * AbsR[2][2]) + (a_pOther->GetHalfWidth().z * AbsR[2][1]);
+	if (glm::abs((t[1] * R[0][0]) - (t[0] * R[1][0])) > ra + rb) {
+		std::cout << "A2 x B0" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A2 x B1
+	ra = (GetHalfWidth().x * AbsR[1][1]) + (GetHalfWidth().y * AbsR[0][1]);
+	rb = (a_pOther->GetHalfWidth().x * AbsR[2][2]) + (a_pOther->GetHalfWidth().z * AbsR[2][0]);
+	if (glm::abs((t[1] * R[0][1]) - (t[0] * R[1][1])) > ra + rb) {
+		std::cout << "A2 x B1" << std::endl;
+		return 1;
+	}
+
+	//Test axis L = A2 x B2
+	ra = (GetHalfWidth().x * AbsR[1][2]) + (GetHalfWidth().y * AbsR[0][2]);
+	rb = (a_pOther->GetHalfWidth().x * AbsR[2][1]) + (a_pOther->GetHalfWidth().y * AbsR[2][0]);
+	if (glm::abs((t[1] * R[0][2]) - (t[0] * R[1][2])) > ra + rb) {
+		std::cout << "A2 x B2" << std::endl;
+		return 1;
+	}
 
 	//there is no axis test that separates this two objects
-	return eSATResults::SAT_NONE;
+	std::cout << "SAT Collision" << std::endl;
+	return 0;
+	//return eSATResults::SAT_NONE;
 }
