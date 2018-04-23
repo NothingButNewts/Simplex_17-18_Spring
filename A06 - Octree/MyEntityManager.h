@@ -3,7 +3,7 @@ Programmer: Alberto Bobadilla (labigm@gmail.com)
 Date: 2017/07
 ----------------------------------------------*/
 #ifndef __MYENTITYMANAGER_H_
-#define __MyENTITYMANAGER_H_
+#define __MYENTITYMANAGER_H_
 
 #include "MyEntity.h"
 
@@ -18,6 +18,7 @@ class MyEntityManager
 	PEntity* m_mEntityArray = nullptr; //array of MyEntity pointers
 	static MyEntityManager* m_pInstance; // Singleton pointer
 public:
+	bool useOctree = false;
 	/*
 	Usage: Gets the singleton pointer
 	Arguments: ---

@@ -29,8 +29,11 @@ void Application::InitVariables(void)
 			m_pEntityMngr->SetModelMatrix(m4Position);
 		}
 	}
-	m_uOctantLevels = 1;
+	m_uOctantLevels = 2;
 	m_pEntityMngr->Update();
+	m_pRoot = new MyOctant(vector3(0, 0, 0), 70);
+	m_pRoot->Subdivide();
+	m_pRoot->placeEntities();
 }
 void Application::Update(void)
 {
@@ -55,13 +58,20 @@ void Application::Display(void)
 	ClearScreen();
 
 	//display octree
-	//m_pRoot->Display();
 	
+	if (soVisible) {
+		m_pRoot->Display(C_BLACK);
+		m_pRoot->DisplayLeafs(C_BLUE);
+	}
+
 	// draw a skybox
 	m_pMeshMngr->AddSkyboxToRenderList();
 	
+	m_pRoot->IsColliding();
+
 	//render list call
 	m_uRenderCallCount = m_pMeshMngr->Render();
+
 
 	//clear the render list
 	m_pMeshMngr->ClearRenderList();
